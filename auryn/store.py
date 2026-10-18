@@ -86,6 +86,9 @@ class Store:
 
     def drop(self, tenant: str) -> None:
         """Remove one tenant's whole memory. Other tenants are unaffected."""
+        from . import schema
+
+        schema.forget(self, tenant)  # its indexes go with it
         try:
             self.graph(tenant).delete()
         except ResponseError:

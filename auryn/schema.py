@@ -19,11 +19,13 @@ RESOLVE_MIN_SCORE = 2.0
 RESOLVE_MARGIN = 1.0
 
 _SLUG = re.compile(r"[^a-z0-9]+")
+_DASHES = re.compile(r"-{2,}")
 
 
 def slug(name: str) -> str:
     """A stable subject key from a human name. Normalisation only, no matching."""
-    s = _SLUG.sub("", (name or "").lower())
+    s = _SLUG.sub("-", (name or "").lower()).strip("-")
+    s = _DASHES.sub("-", s)
     return s[:64] or "unknown"
 
 

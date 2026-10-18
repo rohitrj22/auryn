@@ -1,0 +1,72 @@
+[
+  {
+    "number": 1,
+    "title": "Note list renders empty on first launch after an extended idle period",
+    "body": " **Environment**\n  - Lumen 2.4.1 (build 2411)\n  - macOS 15.1, Apple silicon\n  - Vault: 1,240 notes, sync enabled\n\n  **Steps to reproduce**\n  1. Leave Lumen running overnight, or quit it the previous evening.\n  2. Launch or focus the app in the morning.\n  3. Observe the sidebar.\n\n  **Expected:** the note list populates from the local cache, then reconciles with sync.\n\n  **Actual:** the sidebar shows the loading state for ~4s, then renders empty.\n  Local vault files are intact on disk. Quitting and relaunching restores\n  the full list immediately.\n\n  Reproduces every morning for the past week. Did not happen on 2.3.x.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:50:49Z"
+  },
+  {
+    "number": 2,
+    "title": "Blank window after resume from sleep until the app is relaunched",
+    "body": "**Environment**\n- Lumen 2.4.1\n- macOS 15.1\n- Sync enabled, single account\n\n**Steps to reproduce**\n1. Open Lumen, confirm notes are visible.\n2. Close the laptop lid and leave it for 60+ minutes.\n3. Reopen the lid and focus the Lumen window.\n\n**Expected:** the window restores its previous state.\n\n**Actual:** the window paints blank. No error dialog, no toast. The menu bar\nresponds but clicks in the content area do nothing. Only a full relaunch\nrecovers it.\n\nI can reproduce this on demand with a 30 minute sleep. A 5 minute sleep\ndoes not reproduce it.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:51:12Z"
+  },
+  {
+    "number": 3,
+    "title": "Sidebar stops reflecting new notes until the process is restarted",
+    "body": "Lumen 2.4.0, Ubuntu 24.04, Wayland.\n\nHappens 3-4 times a day. The app stays open, but notes created on my phone\nstop appearing in the sidebar. Notes created locally still show up.\n\n`kill -9` on the process and a relaunch fixes it until it recurs. No\nuseful output on stderr.\n\nCorrelation I noticed: it only happens after a stretch where I haven't\ntouched the window.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:51:36Z"
+  },
+  {
+    "number": 4,
+    "title": "First request to /v1/notes returns 401 after the access token TTL elapses; client does not retry",
+    "body": "**Environment**\n- Lumen 2.4.1\n- Chromium devtools attached to the renderer\n\n**Observed**\n\nFirst request after the app has been idle:\n\nGET /v1/notes?since=1760412000  401\n{\"error\":\"token_expired\",\"hint\":\"refresh required\"}\n\nA manual refresh (Cmd+R) fires the same request and it succeeds:\n\nPOST /v1/auth/refresh  200\nGET  /v1/notes?since=1760412000  200\n\n**Analysis**\n\nThe access token TTL appears to be 15 minutes. The refresh call only fires\non an explicit user action, not ahead of a scheduled fetch. So the first\nfetch after an idle window hits an expired token and the failure is not\nretried. The UI treats the 401 as an empty result set rather than an error.\n\nHappy to send a PR if the maintainers agree on where the refresh should be\ntriggered.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:51:57Z"
+  },
+  {
+    "number": 5,
+    "title": "Full-text search returns zero results until refreshed twice",
+    "body": "**Environment**\n- Lumen 2.4.1, macOS 15.1\n- Vault: 1,240 notes\n\n**Steps to reproduce**\n1. Leave the app idle for 20+ minutes.\n2. Search for a term you know exists, for example a note title.\n3. Observe the result count.\n\n**Expected:** matching notes are listed.\n\n**Actual:** \"No results\". Pressing refresh once still returns nothing.\nPressing it a second time returns the correct results.\n\nThe local index is fine, because searching the same term immediately after\na relaunch works on the first try.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:52:14Z"
+  },
+  {
+    "number": 6,
+    "title": "PDF export writes blank pages while HTML export is correct",
+    "body": "**Environment**\n- Lumen 2.4.1\n- macOS 15.1 and Ubuntu 24.04, both affected\n\n**Steps to reproduce**\n1. Open any note containing headings and a fenced code block.\n2. File > Export > PDF.\n3. Open the generated file.\n\n**Expected:** the rendered note.\n\n**Actual:** the PDF has the correct page count, but every page is blank.\nFile size is ~12 KB regardless of note length.\n\nFile > Export > HTML produces correct output for the same note, so the\nmarkdown renderer itself looks fine. Suspect the print-to-PDF path captures\nthe page before the renderer has painted.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:52:34Z"
+  },
+  {
+    "number": 7,
+    "title": "Search latency grows to 3-4s once the vault exceeds ~5000 notes",
+    "body": "**Environment**\n- Lumen 2.4.1\n- Ubuntu 24.04, 16 GB RAM\n- Vault: 5,380 notes, ~48 MB of markdown\n\n**Measurements**\n\n| Vault size | Time to first result |\n|---|---|\n| ~1,000 notes | under 100ms |\n| ~3,000 notes | ~900ms |\n| ~5,380 notes | 3.2s - 4.1s |\n\nMeasured by typing a 4 character term and timing until the result list\npaints. Repeated 10 times at each size.\n\nThe index appears to be rebuilt per keystroke rather than queried\nincrementally. CPU hits one core at 100% while typing.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:52:48Z"
+  },
+  {
+    "number": 8,
+    "title": "docs/cli.md: subject-verb agreement in the --watch flag description",
+    "body": "`docs/cli.md`, line 42 currently reads:\n\n> `--watch`  monitors the directory for changes and sync automatically\n\nShould be \"syncs automatically\".\n\nMinor, but it is the first flag in the table so it is quite visible.\nHappy to raise a PR.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:53:05Z"
+  },
+  {
+    "number": 9,
+    "title": "Theme preference is written to settings but not applied on next launch",
+    "body": "**Environment**\n- Lumen 2.4.1, Windows 11\n\n**Steps to reproduce**\n1. Settings > Appearance > Theme: Dark.\n2. Confirm the UI switches to dark.\n3. Quit and relaunch.\n\n**Expected:** dark theme applied.\n\n**Actual:** the UI renders in light theme. Settings > Appearance still shows\n\"Dark\" selected, so the preference persisted correctly.\n\nChecked `%APPDATA%\\Lumen\\settings.json`:\n\n{\"appearance\":{\"theme\":\"dark\"}}\n\nSo the value is stored. It looks like the theme is applied before settings\nare read on startup.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:53:32Z"
+  },
+  {
+    "number": 10,
+    "title": "Sync fails intermittently on Windows while the same account succeeds on macOS",
+    "body": "**Environment**\n- Lumen 2.4.1\n- Failing: Windows 11, 23H2\n- Working: macOS 15.1\n- Same account, same vault, both machines\n\n**Observed**\n\nRoughly half of sync attempts on Windows report \"Sync failed, retrying\".\nRetrying by hand usually succeeds. The macOS machine with the identical\nvault has not failed once in the same period.\n\nI assumed a Windows path or file-locking difference, since the vault lives\nunder `C:\\Users\\<me>\\Documents\\Lumen`. Moving the vault to `C:\\lumen` did\nnot change the failure rate.\n\nHappy to collect logs if you tell me which ones are useful.",
+    "author": "rohitrj22",
+    "created_at": "2026-10-18T12:54:26Z"
+  }
+]

@@ -5,6 +5,8 @@ services:
     ports:
       # Host port defaults to 6379. Override with AURYN_PORT if it is taken.
       - "${AURYN_PORT:-6379}:6379"
+      # FalkorDB Browser, for inspecting the memory graph in a UI.
+      - "${AURYN_UI_PORT:-3000}:3000"
     volumes:
       - auryn-data:/var/lib/falkordb/data
     healthcheck:

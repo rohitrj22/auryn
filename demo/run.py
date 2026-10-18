@@ -35,7 +35,7 @@ def show(events: list[Event | dict]) -> None:
         d = e if isinstance(e, dict) else e.__dict__
         read = f"  (read {d['prior_read']} prior)" if d.get("prior_read") else ""
         issue = f" {d['issue']:>4}" if d.get("issue") else "     "
-        print(f"  {d['agent']:<12}{issue}  {d['action']:<13} {d['detail'][:78]}{read}")
+        print(f"  {d['agent']:<15}{issue}  {d['action']:<13} {d['detail'][:74]}{read}")
 
 
 def main() -> None:
@@ -65,15 +65,15 @@ def main() -> None:
         mem = Memory(tenant=args.tenant)
 
     # ---------------------------------------------------------------- phase 0
-    head(0, "the coordinator opens the week")
-    ev = agents.open_week(args.tenant, issues)
+    head(0, "the coordinator opens the batch")
+    ev = agents.open_batch(args.tenant, issues)
     timeline += [e.__dict__ for e in ev]
     show(ev)
 
     # ---------------------------------------------------------------- phase 1
     head(1, f"{args.agents} investigators work in parallel, sharing one memory")
     rows = {str(i.number): dataclasses.asdict(i) for i in issues}
-    work = [(args.tenant, f"inv-{n}", rows) for n in range(1, args.agents + 1)]
+    work = [(args.tenant, f"investigator-{n}", rows) for n in range(1, args.agents + 1)]
     with mp.Pool(args.agents) as pool:
         results = pool.map(agents.investigate, work)
     flat = [e for batch in results for e in batch]
@@ -83,10 +83,15 @@ def main() -> None:
 
     worked = [e for e in flat if e["action"] == "investigated"]
     skipped = [e for e in flat if e["action"] == "skipped"]
+    deferred = [e for e in flat if e["action"] == "deferred"]
     seen = [e["issue"] for e in flat]
-    print(f"\n  claimed {len(seen)} of {len(issues)} issues   "
-          f"investigated {len(worked)}   recognised from memory {len(skipped)}   "
-          f"duplicated work {len(seen) - len(set(seen))}")
+    print(f"\n  claimed {len(seen)} of {len(issues)} issues, "
+          f"{len(seen) - len(set(seen))} handled twice")
+    print(f"  causes investigated {len(worked)}")
+    print(f"  model calls saved by memory          {len(skipped):>2}  "
+          f"(cause was already written)")
+    print(f"  duplicate cause notes avoided        {len(deferred):>2}  "
+          f"(cause was being written at that moment)")
 
     # ---------------------------------------------------------------- phase 2
     head(2, "the engine concluded something nobody told it")
@@ -104,7 +109,7 @@ def main() -> None:
                  for f in derived]
 
     # ---------------------------------------------------------------- phase 3
-    head(3, "the triager takes ownership, then hands the week over")
+    head(3, "the triager takes ownership, then hands the batch over")
     ev = agents.triage(args.tenant)
     timeline += [e.__dict__ for e in ev]
     show(ev)

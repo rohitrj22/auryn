@@ -37,10 +37,10 @@ def _mem(tenant: str) -> Memory:
 # --------------------------------------------------------------------- setup
 
 
-def open_week(tenant: str, issues: list[Issue], *, task: str = TASK) -> list[Event]:
-    """The coordinator opens the week and makes each issue a claimable part."""
+def open_batch(tenant: str, issues: list[Issue], *, task: str = TASK) -> list[Event]:
+    """Open one triage batch and make each issue a claimable part."""
     mem = _mem(tenant)
-    mem.create_task(task, title="incoming issue triage", agent="coordinator")
+    mem.create_task(task, title="open issues to triage", agent="coordinator")
     mem.remember(
         PROCEDURAL,
         "close an issue as a duplicate only after the shared cause is recorded",
@@ -111,7 +111,8 @@ def investigate(args: tuple[str, str, dict[int, dict]]) -> list[dict]:
                 action = "deferred"
                 reply.memory_ops[:] = [op for op in reply.memory_ops if op.kind != SEMANTIC]
                 reply = type(reply)(
-                    text=f"{issue.ref} deferred: another agent is investigating {cause}",
+                    text=f"another agent is recording {cause}; logged {issue.ref} "
+                         f"against it",
                     memory_ops=[op for op in reply.memory_ops if op.kind != SEMANTIC],
                 )
         else:
@@ -140,7 +141,7 @@ def investigate(args: tuple[str, str, dict[int, dict]]) -> list[dict]:
 
 
 def triage(tenant: str, *, task: str = TASK) -> list[Event]:
-    """Reads every finding, corrects a wrong one, then hands the week over."""
+    """Read every finding, correct a wrong one, then hand the batch over."""
     mem = _mem(tenant)
     events: list[Event] = []
 
@@ -173,7 +174,7 @@ def triage(tenant: str, *, task: str = TASK) -> list[Event]:
 
 
 def assign(tenant: str, *, task: str = TASK) -> list[Event]:
-    """Receives the week with two strings and nothing else."""
+    """Receive the batch with two strings and nothing else."""
     mem = _mem(tenant)
     ctx = mem.pick_up(task, agent="assignee")
     if ctx is None:

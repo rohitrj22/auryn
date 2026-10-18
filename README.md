@@ -253,7 +253,7 @@ uv run python -m demo.run --new "notes vanish after the app idles"
 
 | Agent | Job |
 |---|---|
-| coordinator | Splits the week into claimable parts |
+| coordinator | Splits the batch of open issues into claimable parts |
 | investigator (×6) | Claims a part, reads shared memory, then works or defers |
 | triager | Reads every finding, corrects a wrong one, hands over |
 | assignee | Picks up with a tenant id and a task id |

@@ -350,6 +350,12 @@ claimed 10 of 10   investigated 6   recognised from memory 3   duplicated work 0
 Each run writes a self-contained report to `output/triage-report.html` with the
 verdicts, the agent timeline, the memory graph and the measured figures.
 
+**See one without running anything:**
+[sample report](https://htmlpreview.github.io/?https://github.com/rohitrj22/auryn/blob/main/docs/sample-report.html)
+— produced by the command above against the live demo repository. The file is
+[`docs/sample-report.html`](docs/sample-report.html), and it is self-contained:
+no server, no network, no dependencies.
+
 ### Inspect the memory yourself
 
 The FalkorDB Browser ships in the container:

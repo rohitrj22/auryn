@@ -1,0 +1,60 @@
+<!doctype html><meta charset=utf-8><title>Auryn Triage Desk — rohitrj22/auryn-triage-demo</title><style>
+:root{--bg:#fbfaf8;--card:#fff;--ink:#17171a;--mut:#6b6b73;--line:#e6e4e0;
+--good:#1a7f4b;--warn:#a85c00;--acc:#5b3fd6;--code:#f4f2ef}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:25px;margin:0 0 4px;letter-spacing:-.02em}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--mut);
+margin:30px 0 10px;font-weight:600}
+.sub{color:var(--mut);margin:0 0 22px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:16px 18px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+.kpi b{display:block;font-size:23px;letter-spacing:-.02em}
+.kpi span{color:var(--mut);font-size:12px}
+.cluster{border-left:3px solid var(--acc)}
+.cluster h3{margin:0 0 3px;font-size:16px}
+.cause{color:var(--acc);font-weight:600}
+.iss{display:flex;gap:9px;padding:5px 0;border-top:1px solid var(--line);font-size:14px}
+.iss:first-of-type{border-top:0}
+.num{color:var(--mut);min-width:40px;font-variant-numeric:tabular-nums}
+.tag{font-size:11px;padding:1px 7px;border-radius:20px;border:1px solid var(--line);
+color:var(--mut);white-space:nowrap}
+.tag.dup{color:var(--warn);border-color:#f0dfc4;background:#fdf7ee}
+.tag.root{color:var(--good);border-color:#c8e6d4;background:#f1f9f4}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;
+text-transform:uppercase;letter-spacing:.07em;padding:0 10px 7px 0;border-bottom:1px solid var(--line)}
+td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.who{font-weight:600;white-space:nowrap}
+.act{white-space:nowrap}
+.act.skipped{color:var(--warn)}
+.act.investigated{color:var(--good)}
+.act.derived,.act.explained{color:var(--acc);font-weight:600}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;
+padding:11px 13px;overflow-x:auto;margin:8px 0 0}
+.ev{color:var(--mut);font-size:12.5px;padding:2px 0 2px 14px;border-left:2px solid var(--line);margin:3px 0}
+.scroll{overflow-x:auto}
+.note{color:var(--mut);font-size:13px;margin:8px 0 0}
+</style><div class=wrap><h1>Auryn Triage Desk</h1><p class=sub><code>rohitrj22/auryn-triage-demo</code> &nbsp;·&nbsp; tenant <code>auryn-triage-demo</code> &nbsp;·&nbsp; 10 open issues &nbsp;·&nbsp; run took 1.83s</p><div class=grid><div class=kpi><b>10</b><span>issues claimed</span></div><div class=kpi><b>6</b><span>causes investigated</span></div><div class=kpi><b>2</b><span>recognised from memory</span></div><div class=kpi><b>0</b><span>work duplicated</span></div></div><h2>Verdicts</h2><div class='card cluster'><h3><span class=cause>session-expiry</span> &nbsp;<span class=tag>3 reports</span></h3><div class=iss><span class=num>#1</span><span>Note list renders empty on first launch after an extended idle period</span><span class='tag root'>investigated by inv-2</span></div><div class=iss><span class=num>#4</span><span>First request to /v1/notes returns 401 after the access token TTL elapses; client does not retry</span><span class='tag dup'>recognised by inv-4 after reading 6 prior</span></div><div class=iss><span class=num>#5</span><span>Full-text search returns zero results until refreshed twice</span><span class='tag dup'>recognised by inv-5 after reading 3 prior</span></div></div><div class='card cluster'><h3><span class=cause>platform-path</span> &nbsp;<span class=tag>1 report</span></h3><div class=iss><span class=num>#10</span><span>Sync fails intermittently on Windows while the same account succeeds on macOS</span><span class='tag root'>investigated by inv-4</span></div></div><div class='card cluster'><h3><span class=cause>pdf-export</span> &nbsp;<span class=tag>1 report</span></h3><div class=iss><span class=num>#6</span><span>PDF export writes blank pages while HTML export is correct</span><span class='tag root'>investigated by inv-2</span></div></div><div class='card cluster'><h3><span class=cause>search-performance</span> &nbsp;<span class=tag>1 report</span></h3><div class=iss><span class=num>#7</span><span>Search latency grows to 3-4s once the vault exceeds ~5000 notes</span><span class='tag root'>investigated by inv-1</span></div></div><div class='card cluster'><h3><span class=cause>docs-copy</span> &nbsp;<span class=tag>1 report</span></h3><div class=iss><span class=num>#8</span><span>docs/cli.md: subject-verb agreement in the --watch flag description</span><span class='tag root'>investigated by inv-6</span></div></div><div class='card cluster'><h3><span class=cause>theme-persistence</span> &nbsp;<span class=tag>1 report</span></h3><div class=iss><span class=num>#9</span><span>Theme preference is written to settings but not applied on next launch</span><span class='tag root'>investigated by inv-3</span></div></div><h2>What the engine concluded by itself</h2><div class=card><b>5 separate events concern session-expiry</b><div class=ev>#5 reported, same cause as known session-expiry</div><div class=ev>#4 reported, same cause as known session-expiry</div><div class=ev>#3 reported and reproduced</div><div class=ev>#1 reported and reproduced</div><div class=ev>#2 reported and reproduced</div></div><div class=card><b>6 separate events concern session-expiry  &lt;- counted 6 reports</b><div class=ev>fix shipped in PR #88: refresh the token before a scheduled fetch</div><div class=ev>#5 reported, same cause as known session-expiry</div><div class=ev>#4 reported, same cause as known session-expiry</div><div class=ev>#3 reported and reproduced</div><div class=ev>#1 reported and reproduced</div><div class=ev>#2 reported and reproduced</div></div><div class=card><b>now: root cause session-expiry: the Windows reports share the token expiry;</b><div class=ev>replaced: root cause platform-path: a platform-specific path or file-locking difference</div></div><p class=note>No language model took part in the line above. The engine counted events that shared a subject and linked the evidence it counted.</p><h2>Agent timeline</h2><div class='card scroll'><table><tr><th>agent</th><th>issue</th><th>action</th><th>detail</th><th>prior read</th></tr><tr><td class=who>coordinator</td><td class=num></td><td class='act opened'>opened</td><td>10 issues made claimable</td><td class=num></td></tr><tr><td class=who>inv-2</td><td class=num>#1</td><td class='act investigated'>investigated</td><td>Reproduced #1. Cause: session-expiry — the access token expires while the app is idle, and the first request after that is not retried.</td><td class=num>2</td></tr><tr><td class=who>inv-4</td><td class=num>#10</td><td class='act investigated'>investigated</td><td>Reproduced #10. Cause: platform-path — a platform-specific path or file-locking difference.</td><td class=num>11</td></tr><tr><td class=who>inv-2</td><td class=num>#6</td><td class='act investigated'>investigated</td><td>Reproduced #6. Cause: pdf-export — the print-to-PDF path captures the page before the renderer has painted.</td><td class=num>9</td></tr><tr><td class=who>inv-1</td><td class=num>#7</td><td class='act investigated'>investigated</td><td>Reproduced #7. Cause: search-performance — the search index is rebuilt per keystroke instead of queried incrementally.</td><td class=num>9</td></tr><tr><td class=who>inv-6</td><td class=num>#8</td><td class='act investigated'>investigated</td><td>Reproduced #8. Cause: docs-copy — a wording error in the committed documentation.</td><td class=num>9</td></tr><tr><td class=who>inv-3</td><td class=num>#9</td><td class='act investigated'>investigated</td><td>Reproduced #9. Cause: theme-persistence — the theme is applied before stored settings are read on startup.</td><td class=num>9</td></tr><tr><td class=who>inv-1</td><td class=num>#2</td><td class='act deferred'>deferred</td><td>#2 deferred: another agent is investigating session-expiry</td><td class=num>2</td></tr><tr><td class=who>inv-3</td><td class=num>#3</td><td class='act deferred'>deferred</td><td>#3 deferred: another agent is investigating session-expiry</td><td class=num>2</td></tr><tr><td class=who>inv-4</td><td class=num>#4</td><td class='act skipped'>skipped</td><td>#4 matches a cause already in memory: session-expiry.</td><td class=num>6</td></tr><tr><td class=who>inv-5</td><td class=num>#5</td><td class='act skipped'>skipped</td><td>#5 matches a cause already in memory: session-expiry.</td><td class=num>3</td></tr><tr><td class=who>engine</td><td class=num></td><td class='act derived'>derived</td><td>5 separate events concern session-expiry</td><td class=num></td></tr><tr><td class=who>triager</td><td class=num></td><td class='act read'>read</td><td>read 8 lasting facts the swarm recorded</td><td class=num>8</td></tr><tr><td class=who>triager</td><td class=num></td><td class='act corrected'>corrected</td><td>superseded the platform-path diagnosis</td><td class=num></td></tr><tr><td class=who>triager</td><td class=num></td><td class='act handoff'>handoff</td><td>triager -&gt; assignee</td><td class=num></td></tr><tr><td class=who>assignee</td><td class=num></td><td class='act picked-up'>picked up</td><td>handed from &#x27;triager&#x27;; can state 15 memories it was never told</td><td class=num>15</td></tr><tr><td class=who>assignee</td><td class=num></td><td class='act handoff'>handoff</td><td>assignee -&gt; reviewer</td><td class=num></td></tr><tr><td class=who>auditor</td><td class=num></td><td class='act explained'>explained</td><td>6 separate events concern session-expiry  &lt;- counted 6 reports</td><td class=num></td></tr><tr><td class=who>auditor</td><td class=num></td><td class='act belief-changed'>belief changed</td><td>now: root cause session-expiry: the Windows reports share the token expiry;</td><td class=num></td></tr></table></div><h2>The memory graph this run built</h2><div class=card><pre>(:Session)──HAS_TURN──▶(:Turn)──NEXT──▶(:Turn)
+     │
+   PRODUCED
+     ▼
+(:Memory:Event)      ──┐
+(:Memory:Fact)       ──┼──ABOUT──▶(:Subject)◀──RELATED_TO──▶(:Subject)
+(:Memory:Procedure)  ──┘              ▲
+                                  CONCERNS
+(:Memory:Fact)──DERIVED_FROM──▶(:Event)   │
+(:Memory:Fact)──SUPERSEDES────▶(:Fact)    │
+                                          │
+(:Agent)──WORKING_ON──▶(:Task)────────────┘   many agents, additive
+(:Agent)──OWNS────────▶(:Task)                one owner, moved by handoff
+(:Handoff)──FROM/TO──▶(:Agent),  ──OF──▶(:Task)</pre></div><h2>Measured, from FalkorDB's own instruments</h2><div class=grid><div class=kpi><b>7</b><span>tenant graphs (GRAPH.LIST)</span></div><div class=kpi><b>13.0 MB</b><span>instance memory (INFO memory)</span></div><div class=kpi><b>335.871 µs</b><span>GRAPH.QUERY p50 (server)</span></div><div class=kpi><b>6225.919 µs</b><span>GRAPH.QUERY p99 (server)</span></div></div><div class=card><b>Ran against</b><pre>THREAD_COUNT = 8
+OMP_THREAD_COUNT = 4
+MAX_QUEUED_QUERIES = 500
+CACHE_SIZE = 25</pre></div></div>

@@ -36,11 +36,11 @@ duplicates were closed.
 
 Each failure is a connection an agent with only a context window cannot make.
 
-| Failure | The missing connection |
+| What goes wrong | What is not connected |
 |---|---|
-| Reporters repeat themselves | across **sessions** |
-| One agent cannot see what another learned | across **agents** |
-| Nobody can explain a verdict | across **evidence** |
+| A reporter explains the same thing twice | This week's conversation to last week's |
+| Two agents investigate the same bug | One agent's findings to another agent's |
+| Nobody can say why a verdict was reached | A conclusion to the evidence behind it |
 
 ---
 

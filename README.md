@@ -410,7 +410,19 @@ uv run python -m proofs.run_all      # 6/6, no credentials
 uv run python -m demo.run --repo rohitrj22/auryn-triage-demo
 ```
 
-If port 6379 or 3000 is taken, set `AURYN_PORT` or `AURYN_UI_PORT`.
+### If port 6379 is already taken
+
+Shift the port **and tell Auryn where to look**. Both, not one:
+
+```bash
+AURYN_PORT=6380 AURYN_UI_PORT=3010 docker compose up -d
+export FALKORDB_URL=falkor://localhost:6380
+```
+
+Auryn defaults to `falkor://localhost:6379`, so moving the container without
+setting `FALKORDB_URL` leaves it looking at the old port. If another Redis or
+Valkey is listening there, the error says `Authentication required`, which
+points nowhere useful. Auryn now detects that case and tells you what to do.
 
 ```bash
 uv run pytest                        # unit and integration tests

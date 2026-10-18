@@ -1,7 +1,7 @@
 services:
   falkordb:
     image: falkordb/falkordb:latest
-    container_name: auryn-falkordb
+    container_name: ${AURYN_CONTAINER:-auryn-falkordb}
     environment:
       # FalkorDB ships THREAD_COUNT 2 and MAX_QUEUED_QUERIES 25. An agent
       # memory layer is concurrent by nature, so raise both. Every proof

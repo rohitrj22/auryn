@@ -41,10 +41,35 @@ class Store:
             self._db = FalkorDB(host=host, port=port)
             self._db.connection.ping()
         except (RedisConnectionError, OSError) as exc:
-            raise StoreUnavailable(
-                f"FalkorDB is not reachable at {host}:{port}. "
-                f"Auryn has no other store and cannot continue. ({exc})"
-            ) from exc
+            raise StoreUnavailable(self._why(host, port, exc)) from exc
+        except RedisError as exc:
+            # Something answered, but it is not our FalkorDB. A different Redis
+            # on the same port gives "Authentication required", which points
+            # nowhere useful on its own.
+            raise StoreUnavailable(self._why(host, port, exc)) from exc
+
+    @staticmethod
+    def _why(host: str, port: int, exc: Exception) -> str:
+        text = str(exc).lower()
+        hint = ""
+        if "auth" in text or "wrongtype" in text or "unknown command" in text:
+            hint = (
+                f"\n  Something is listening on {port} but it is not FalkorDB. "
+                f"Another Redis or Valkey is the usual cause."
+                f"\n  Start FalkorDB on a free port and point Auryn at it:"
+                f"\n      AURYN_PORT=6380 docker compose up -d"
+                f"\n      export FALKORDB_URL=falkor://localhost:6380"
+            )
+        elif "refused" in text or "connect" in text:
+            hint = (
+                f"\n  Nothing is listening on {port}. Start it with:"
+                f"\n      docker compose up -d"
+                f"\n  If that port is taken, use AURYN_PORT and FALKORDB_URL together."
+            )
+        return (
+            f"FalkorDB is not reachable at {host}:{port}. "
+            f"Auryn has no other store and cannot continue. ({exc}){hint}"
+        )
 
     @property
     def connection(self):

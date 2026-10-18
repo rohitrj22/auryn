@@ -298,69 +298,49 @@ Measured on a 12-core laptop. Every figure comes from FalkorDB's own
 instruments: `GRAPH.LIST`, `INFO memory`, `INFO latencystats` and
 `INFO commandstats`. The engine keeps no counters of its own.
 
-### Tenant isolation at scale
+### Speed
+
+| Measurement | Result |
+|---|---|
+| Recall, 100 stored memories | 1.2 ms |
+| Recall, 800 stored memories | 1.4 ms |
+| Recall, 2,000 stored memories | 2.3 ms |
+| Recall, 5,000 stored memories | 4.6 ms |
+| Round trips per `recall()` | 1 |
+| Round trips per `remember()` | 1 |
+| Round trips per `standing()` | 1 |
+| Peak throughput, 8 processes | 995 engine operations a second |
+
+Recall cost stays near flat as a tenant remembers more, because the query caps
+its starting set before it walks the graph.
+
+### Throughput by process count
+
+Load comes from several processes, because one Python process cannot saturate
+the server.
+
+| Processes | Engine operations a second |
+|---|---|
+| 1 | 299 |
+| 2 | 561 |
+| 4 | 874 |
+| **8** | **995** |
+| 16 | 949 |
+
+### Tenants and correctness
 
 | Measurement | Result |
 |---|---|
 | Tenant graphs in one instance | 1,000, counted by `GRAPH.LIST` |
 | Time to create them | 20.9 s, about 48 a second |
-| Instance memory | 13 MB to 1,106 MB |
 | Cost per tenant | about 1,067 KB, mostly its eight indexes |
-| Memory after deleting them | back to 13 MB, fully reclaimed |
+| Memory after deleting them | fully reclaimed |
 | Cross-tenant reads that leaked | **0**, in 999 probes across 10 tenants |
-
-### Recall
-
-One round trip, whatever the question. Cost does not grow with how much a
-tenant remembers.
-
-| Stored memories matching the question | Before the fix | Now |
-|---|---|---|
-| 100 | 14 ms | **1.2 ms** |
-| 800 | 312 ms | **1.4 ms** |
-| 2,000 | query timed out | **2.3 ms** |
-| 5,000 | not reached | **4.6 ms** |
-
-The query applied its limit after the traversal, so it expanded every full-text
-match before trimming. Capping the seeds first made the cost flat.
-[`test_recall_scales.py`](tests/integration/test_recall_scales.py) fails if that
-returns.
-
-### Writes
-
-| | Before | Now |
-|---|---|---|
-| Round trips per `remember()` | 5 | **1** |
-| Round trips per `remember()` that derives a fact | 7 | 2 |
-| Round trips per `recall()` and `standing()` | 1 | 1 |
-
-### Throughput
-
-Load comes from several processes, because one Python process cannot saturate
-the server.
-
-| Processes | Engine operations per second | Server µs per query |
-|---|---|---|
-| 1 | 299 | 834 |
-| 2 | 561 | 1,020 |
-| 4 | 874 | 1,521 |
-| **8** | **995** | 2,678 |
-| 16 | 949 | 5,061 |
-
-It scales to eight processes, then flattens. Past that the load generator and
-the database share the same twelve cores, so the benchmark measures the laptop.
-Merging the write path took the peak from 578 to 995.
-
-### Correctness under contention
-
-| Measurement | Result |
-|---|---|
 | Agents racing for one claim | 16 processes, 25 rounds |
-| Claim attempts | 400 |
-| Winners | **exactly 25**, one per round |
-| Swarm on one job | 8 agents, 10 parts, **0 duplicated work** |
+| Claim attempts, and winners | 400 attempts, **exactly 25** winners |
+| Swarm on one job | 8 agents, 10 parts, **0** duplicated work |
 
-Run them yourself:
+Reproduce any of it:
 
 ```bash
 uv run python -m proofs.isolation --tenants 1000

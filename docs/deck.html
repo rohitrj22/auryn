@@ -1,0 +1,185 @@
+<!doctype html><meta charset=utf-8><title>Auryn</title>
+<style>
+:root{--bg:#fbfaf8;--ink:#17171a;--mut:#6b6b73;--line:#e6e4e0;--acc:#5b3fd6;
+--good:#1a7f4b;--code:#f4f2ef}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.s{display:none;min-height:100vh;padding:7vh 8vw 9vh;flex-direction:column;justify-content:center}
+.s.on{display:flex}
+h1{font-size:54px;letter-spacing:-.03em;line-height:1.05;margin:0 0 18px}
+h2{font-size:34px;letter-spacing:-.02em;line-height:1.15;margin:0 0 26px}
+h3{font-size:14px;text-transform:uppercase;letter-spacing:.12em;color:var(--mut);
+margin:0 0 14px;font-weight:600}
+p{font-size:22px;line-height:1.5;margin:0 0 14px;max-width:34em}
+.lead{font-size:26px}
+.mut{color:var(--mut)}
+ul{list-style:none;margin:6px 0 0}
+li{font-size:21px;padding:9px 0 9px 26px;position:relative;max-width:34em}
+li:before{content:"";position:absolute;left:0;top:19px;width:9px;height:9px;
+border-radius:2px;background:var(--acc)}
+table{border-collapse:collapse;font-size:19px;margin:8px 0 0}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.1em;
+color:var(--mut);padding:0 26px 9px 0;border-bottom:1px solid var(--line)}
+td{padding:9px 26px 9px 0;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+b.n{color:var(--acc)}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--code);border:1px solid var(--line);border-radius:9px;
+padding:16px 19px;font-size:17px;line-height:1.6;margin:10px 0 0;overflow-x:auto}
+.demo{background:var(--acc);color:#fff;align-items:center;text-align:center}
+.demo h1{font-size:88px;color:#fff;margin:0}
+.demo p{color:#e4ddfb;font-size:26px;margin-top:16px}
+.art{font-family:ui-monospace,Menlo,monospace;font-size:16px;line-height:1.65;
+white-space:pre;color:var(--ink)}
+.n{position:fixed;right:22px;bottom:16px;font-size:13px;color:var(--mut)}
+.k{position:fixed;left:22px;bottom:16px;font-size:13px;color:var(--mut)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px;max-width:none}
+.two p,.two li{max-width:none}
+</style>
+
+<!-- 1 -->
+<section class="s on"><h3>WeMakeDevs Graph Hacks · Track 02</h3>
+<h1>Auryn</h1>
+<p class=lead>A memory engine for AI agents, on FalkorDB.</p>
+<p class=mut>And a crew of agents built on it, triaging GitHub issues.</p></section>
+
+<!-- 2 -->
+<section class=s><h3>The problem</h3>
+<h2>An agent forgets everything when its process stops.</h2>
+<p>It also cannot see what another agent learned.</p>
+<p>Those are two problems with one fix. Put the memory outside the agent, in a
+shape where things connect.</p></section>
+
+<!-- 3 -->
+<section class=s><h3>What breaks without it</h3>
+<table>
+<tr><th>Failure</th><th>The missing connection</th></tr>
+<tr><td>Reporters repeat themselves</td><td>across <b class=n>sessions</b></td></tr>
+<tr><td>One agent cannot see what another learned</td><td>across <b class=n>agents</b></td></tr>
+<tr><td>Nobody can explain a verdict</td><td>across <b class=n>evidence</b></td></tr>
+</table>
+<p class=mut style="margin-top:28px;font-size:19px">A context window closes all
+three. Until it closes.</p></section>
+
+<!-- 4 -->
+<section class=s><h3>Three kinds of memory</h3>
+<table>
+<tr><th>Kind</th><th>Holds</th><th>Why separate</th></tr>
+<tr><td><code>EVENT</code><br><span class=mut style=font-size:15px>episodic</span></td>
+<td>Something that happened, with a time</td>
+<td>Counting events is how it found five issues sharing one bug</td></tr>
+<tr><td><code>FACT</code><br><span class=mut style=font-size:15px>semantic</span></td>
+<td>Something that stays true</td>
+<td>The agent carries it every turn. It never searches for it.</td></tr>
+<tr><td><code>PROCEDURE</code><br><span class=mut style=font-size:15px>procedural</span></td>
+<td>How to act, and when</td>
+<td>The rule lives in memory, not in code</td></tr>
+</table></section>
+
+<!-- 5 -->
+<section class=s><h3>Everything meets at a topic</h3>
+<div class=art>   note from agent A  ──┐
+                         │
+   note from agent B  ──┼──▶  TOPIC  "session-expiry"
+                         │
+   a job to be done   ──┘</div>
+<p style="margin-top:26px">Two agents file under one topic, weeks apart. Their
+notes then find each other.</p>
+<p>A job is filed under topics too. That arrow is what makes a handover work.</p></section>
+
+<!-- 6 -->
+<section class=s><h3>One graph per user</h3>
+<h2>A leak is impossible, not forbidden.</h2>
+<p>The graph name is the user. A query names one graph. There is no syntax for
+reaching a second one.</p>
+<pre>Memory(tenant="alice")   →  graph "alice"
+Memory(tenant="bob")     →  graph "bob"   unreachable from alice</pre>
+<p class=mut style=margin-top:18px>No tenant filter anywhere. So no forgotten
+filter either.</p></section>
+
+<!-- 7 DEMO -->
+<section class="s demo"><h1>Demo</h1><p>Ten GitHub issues. Six agents. One memory.</p></section>
+
+<!-- 8 -->
+<section class=s><h3>What you just saw</h3>
+<ul>
+<li>Six agents in six processes. They send each other nothing.</li>
+<li>One investigated the shared bug. Four avoided repeating it.</li>
+<li>Two lost a race for the cause. Two read it from memory.</li>
+<li>Nobody told it session expiry was the main problem. It counted.</li>
+<li>The assignee started with two strings and read fifteen notes.</li>
+</ul></section>
+
+<!-- 9 -->
+<section class=s><h3>Benchmarks</h3>
+<div class=two>
+<div><table>
+<tr><th>Tenants</th><th></th></tr>
+<tr><td>Graphs in one instance</td><td><b class=n>1,000</b></td></tr>
+<tr><td>Cost per tenant</td><td>1,067 KB</td></tr>
+<tr><td>Cross-tenant leaks</td><td><b class=n>0</b> in 999 probes</td></tr>
+<tr><td>Claim attempts</td><td>400</td></tr>
+<tr><td>Winners</td><td><b class=n>exactly 25</b></td></tr>
+</table></div>
+<div><table>
+<tr><th>Recall</th><th>Before</th><th>Now</th></tr>
+<tr><td>100 memories</td><td>14 ms</td><td><b class=n>1.2 ms</b></td></tr>
+<tr><td>800 memories</td><td>312 ms</td><td><b class=n>1.4 ms</b></td></tr>
+<tr><td>2,000 memories</td><td>timed out</td><td><b class=n>2.3 ms</b></td></tr>
+<tr><td>5,000 memories</td><td>—</td><td><b class=n>4.6 ms</b></td></tr>
+</table></div>
+</div>
+<p class=mut style="margin-top:24px;font-size:18px">Every figure from FalkorDB's
+own instruments. The engine keeps no counters of its own.</p></section>
+
+<!-- 10 -->
+<section class=s><h3>A bug worth admitting</h3>
+<h2>Recall used to collapse under its own data.</h2>
+<p>The limit sat after the traversal. So it expanded every match before trimming.
+The more a user remembered, the slower every question became.</p>
+<p>It timed out at two thousand memories. <b>The demo worked because it holds
+ten issues.</b></p>
+<p class=mut>Capping the seeds first made the cost flat. A test now fails if
+that returns.</p></section>
+
+<!-- 11 -->
+<section class=s><h3>Bring your own agent</h3>
+<p>Auryn does not own your loop. It never calls a model.</p>
+<pre>mem = Memory(tenant=user_id)
+
+def chat(message):
+    context = mem.standing() + mem.recall(message)   # before
+    reply   = your_own_llm(context, message)         # your code
+    mem.remember(FACT, a_fact_from(reply), ...)      # after
+    return reply</pre>
+<p class=mut style=margin-top:16px>Start FalkorDB. Point Auryn at it. Two lines
+around what you already wrote.</p></section>
+
+<!-- 12 -->
+<section class=s><h3>The graph has to do real work</h3>
+<pre>$ docker compose stop falkordb
+$ uv run python -m proofs.graph_required
+
+  PASS   everything broke</pre>
+<p style=margin-top:20px>Auryn cannot be built without FalkorDB. No cache, no
+file store, no second database.</p>
+<p class=mut>Six more proofs, one per judging criterion. No credentials needed.</p></section>
+
+<!-- 13 -->
+<section class=s><h1 style=font-size:40px>Auryn</h1>
+<p class=lead>github.com/rohitrj22/auryn</p>
+<p class=mut>Track 02 · Agent Memory and Coordination</p></section>
+
+<div class=k>← → to move</div><div class=n id=num></div>
+<script>
+const s=[...document.querySelectorAll('.s')];let i=0;
+const go=n=>{s[i].classList.remove('on');i=Math.max(0,Math.min(s.length-1,n));
+s[i].classList.add('on');document.getElementById('num').textContent=(i+1)+' / '+s.length;};
+go(0);
+addEventListener('keydown',e=>{
+if(['ArrowRight','ArrowDown',' ','PageDown','Enter'].includes(e.key))go(i+1);
+if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(e.key))go(i-1);
+if(e.key==='Home')go(0);if(e.key==='End')go(s.length-1);});
+addEventListener('click',e=>go(e.clientX>innerWidth/2?i+1:i-1));
+</script>

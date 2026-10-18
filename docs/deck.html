@@ -114,31 +114,6 @@ filter either.</p></section>
 <li>The assignee started with two strings and read fifteen notes.</li>
 </ul></section>
 
-<!-- 9 -->
-<section class=s><h3>Benchmarks</h3>
-<div class=two>
-<div><table>
-<tr><th>Tenants and correctness</th><th>Measured</th></tr>
-<tr><td>Graphs in one instance</td><td><b class=n>1,000</b></td></tr>
-<tr><td>Cost per tenant</td><td>1,067 KB</td></tr>
-<tr><td>Cross-tenant leaks</td><td><b class=n>0</b> in 999 probes</td></tr>
-<tr><td>Claim attempts</td><td>400</td></tr>
-<tr><td>Winners</td><td><b class=n>exactly 25</b></td></tr>
-<tr><td>Swarm on one job</td><td><b class=n>0</b> duplicated work</td></tr>
-</table></div>
-<div><table>
-<tr><th>Speed</th><th>Measured</th></tr>
-<tr><td>Recall, 100 memories</td><td><b class=n>1.2 ms</b></td></tr>
-<tr><td>Recall, 800 memories</td><td><b class=n>1.4 ms</b></td></tr>
-<tr><td>Recall, 2,000 memories</td><td><b class=n>2.3 ms</b></td></tr>
-<tr><td>Recall, 5,000 memories</td><td><b class=n>4.6 ms</b></td></tr>
-<tr><td>Round trips per operation</td><td><b class=n>1</b></td></tr>
-<tr><td>Peak throughput</td><td><b class=n>995</b> ops/sec</td></tr>
-</table></div>
-</div>
-<p class=mut style="margin-top:24px;font-size:18px">Every figure from FalkorDB's
-own instruments. The engine keeps no counters of its own.</p></section>
-
 <!-- 11 -->
 <section class=s><h3>Bring your own agent</h3>
 <p>Auryn does not own your loop. It never calls a model.</p>

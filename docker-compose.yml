@@ -2,6 +2,13 @@ services:
   falkordb:
     image: falkordb/falkordb:latest
     container_name: auryn-falkordb
+    environment:
+      # FalkorDB ships THREAD_COUNT 2 and MAX_QUEUED_QUERIES 25. An agent
+      # memory layer is concurrent by nature, so raise both. Every proof
+      # prints the configuration it ran against, so the figures stay honest.
+      FALKORDB_ARGS: >-
+        ${FALKORDB_ARGS:-THREAD_COUNT 8 OMP_THREAD_COUNT 4
+        MAX_QUEUED_QUERIES 500 TIMEOUT 5000 RESULTSET_SIZE 10000}
     ports:
       # Host port defaults to 6379. Override with AURYN_PORT if it is taken.
       - "${AURYN_PORT:-6379}:6379"

@@ -74,18 +74,34 @@ def _commandstats(info: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return out
 
 
+# Reads go through GRAPH.RO_QUERY, writes through GRAPH.QUERY. Counting only
+# one of them would miss most of the work.
+_QUERY_COMMANDS = ("graph.QUERY", "GRAPH.QUERY", "graph.query",
+                   "graph.RO_QUERY", "GRAPH.RO_QUERY", "graph.ro_query")
+
+
 def graph_query_stats(store: Store) -> dict[str, Any]:
-    """Just the GRAPH.QUERY row: calls, usec_per_call, rejected, failed."""
+    """Both query command paths, summed: calls, usec_per_call, rejected, failed."""
     stats = _commandstats(store.connection.info("commandstats"))
-    for name in ("graph.QUERY", "GRAPH.QUERY", "graph.query"):
-        if name in stats:
-            return stats[name]
-    return {}
+    rows = [stats[n] for n in _QUERY_COMMANDS if n in stats]
+    if not rows:
+        return {}
+    calls = sum(int(r.get("calls") or 0) for r in rows)
+    usec = sum(float(r.get("usec") or 0.0) for r in rows)
+    return {
+        "calls": calls,
+        "usec": usec,
+        "usec_per_call": (usec / calls) if calls else 0.0,
+        "rejected_calls": sum(int(r.get("rejected_calls") or 0) for r in rows),
+        "failed_calls": sum(int(r.get("failed_calls") or 0) for r in rows),
+        "by_command": {n: stats[n] for n in _QUERY_COMMANDS if n in stats},
+    }
 
 
 def graph_query_percentiles(store: Store) -> dict[str, float]:
+    """Server percentiles. Prefers the write path, falls back to read-only."""
     pcts = _percentiles(store.connection.info("latencystats"))
-    for name in ("graph.QUERY", "GRAPH.QUERY", "graph.query"):
+    for name in _QUERY_COMMANDS:
         if name in pcts:
             return pcts[name]
     return {}

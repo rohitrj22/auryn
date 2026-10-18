@@ -46,6 +46,7 @@ RANGE_INDEXES = (
     "CREATE INDEX FOR (m:Memory)  ON (m.id)",
     "CREATE INDEX FOR (s:Session) ON (s.id)",
     "CREATE INDEX FOR (t:Task)    ON (t.id)",
+    "CREATE INDEX FOR (a:Agent)   ON (a.name)",
 )
 
 FULLTEXT_INDEXES = (
@@ -141,6 +142,52 @@ RETURN m.id AS id
 # The value is never user input; it comes from the KINDS tuple in models.py.
 ADD_KIND_LABEL = "MATCH (m:Memory {{id: $id}}) SET m:{label} RETURN m.id AS id"
 
+# ONE round trip for a whole write. It replaces five separate queries:
+# resolve-adjacent subject creation, the memory write, the kind label, the
+# session link, and the consolidation count.
+#
+# The {label} slot is filled from the KINDS tuple in models.py and is never
+# user input. A label cannot be a query parameter in Cypher, so three
+# pre-built variants exist rather than one built from a string at call time.
+WRITE_MEMORY_ONE_SHOT = """
+MERGE (m:Memory {{id: $id}})
+SET   m:{label},
+      m.text = $text, m.at = $at, m.subject_key = $subject_key,
+      m.agent = $agent, m.session_id = $session_id,
+      m.truncated = $truncated, m.derived = false,
+      m.superseded = coalesce(m.superseded, false), m.trigger = $trigger
+WITH m
+CALL {{ WITH m
+  UNWIND $subjects AS row
+    MERGE (s:Subject {{key: row.k}})
+    SET   s.name = coalesce(s.name, row.n)
+    MERGE (m)-[:ABOUT]->(s)
+}}
+WITH m
+CALL {{ WITH m
+  MATCH (sess:Session {{id: $session_id}})
+  MERGE (sess)-[:PRODUCED]->(m)
+}}
+WITH m
+MERGE (a:Agent {{name: $agent}})
+MERGE (a)-[:WROTE]->(m)
+WITH m
+CALL {{ WITH m
+  UNWIND $old_ids AS oid
+    MATCH (old:Memory {{id: oid}})
+    WHERE old.id <> m.id AND coalesce(old.superseded, false) = false
+    SET   old.superseded = true
+    MERGE (m)-[:SUPERSEDES]->(old)
+}}
+WITH m
+// Keep a running count ON the subject rather than re-counting its events.
+// The scan this replaces was O(n) in events per subject, so every write got
+// slower as memory grew. This is an indexed lookup and one property write.
+MATCH (ps:Subject {{key: $subject_key}})
+SET   ps.event_count = coalesce(ps.event_count, 0) + $event_delta
+RETURN m.id AS id, ps.event_count AS events_on_subject
+"""
+
 # Supersession is ALWAYS explicit. The caller names the memories being
 # replaced; the engine never infers it from a shared subject.
 #
@@ -166,8 +213,21 @@ RETURN size(olds) AS superseded_count
 # ranking is closeness first, then recency, then text score.
 RECALL = """
 CALL db.idx.fulltext.queryNodes('Memory', $terms) YIELD node AS seed, score
-OPTIONAL MATCH (seed)-[:ABOUT]->(:Subject)-[:RELATED_TO*0..1]-(:Subject)<-[:ABOUT]-(near:Memory)
-WITH collect({m: seed, s: score, h: 0}) + collect({m: near, s: score, h: 1}) AS rows
+// Cap the seeds BEFORE expanding. Without this, recall traverses every
+// full-text match and only then applies LIMIT, so cost grows with how much
+// the tenant remembers: 14 ms at 50 matches, 312 ms at 800, a timeout at
+// 2000. Bounding the seeds makes the work independent of total memory size.
+WITH seed, score ORDER BY score DESC LIMIT $seed_cap
+WITH collect({m: seed, s: score, h: 0}) AS direct, collect(seed) AS seeds
+CALL {
+  WITH seeds
+  UNWIND seeds AS sd
+  MATCH (sd)-[:ABOUT]->(:Subject)-[:RELATED_TO*0..1]-(:Subject)<-[:ABOUT]-(near:Memory)
+  WITH DISTINCT near
+  LIMIT $near_cap
+  RETURN collect({m: near, s: 0.0, h: 1}) AS nearby
+}
+WITH direct + nearby AS rows
 UNWIND rows AS row
 WITH row.m AS m, row.s AS score, row.h AS hops
 WHERE m IS NOT NULL

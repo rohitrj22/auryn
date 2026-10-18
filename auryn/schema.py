@@ -55,6 +55,8 @@ def forget(store: Store, tenant: str) -> None:
     after forget_everything(), because the full-text index was never rebuilt.
     """
     _READY.discard((store.url, tenant))
+    for cache_key in [k for k in _RESOLVED if k[0] == store.url and k[1] == tenant]:
+        del _RESOLVED[cache_key]
 
 
 def _existing(store: Store, tenant: str) -> set[tuple[str, str]]:
@@ -92,6 +94,13 @@ def ensure(store: Store, tenant: str) -> None:
     _READY.add(key)
 
 
+# Names this process has already resolved. Agents reuse a small set of
+# subjects, so the full-text lookup is the hot path worth removing.
+# A stale entry can only cause a new subject where a merge was possible, never
+# a wrong merge, because only positive resolutions are cached.
+_RESOLVED: dict[tuple[str, str, str], tuple[str, str | None]] = {}
+
+
 def resolve_subject(store: Store, tenant: str, name: str) -> tuple[str, str | None]:
     """Map a subject name onto an existing subject, or mint a new one.
 
@@ -107,6 +116,10 @@ def resolve_subject(store: Store, tenant: str, name: str) -> tuple[str, str | No
     if not terms:
         return key, None
 
+    cached = _RESOLVED.get((store.url, tenant, terms))
+    if cached is not None:
+        return cached
+
     try:
         res = store.query(tenant, q.RESOLVE_SUBJECT, {"terms": terms})
     except ResponseError:
@@ -114,16 +127,17 @@ def resolve_subject(store: Store, tenant: str, name: str) -> tuple[str, str | No
 
     rows = res.result_set or []
     if not rows:
+        _RESOLVED[(store.url, tenant, terms)] = (key, None)
         return key, None
 
     top_key, _top_name, top_score = rows[0][0], rows[0][1], float(rows[0][2])
     if top_score < RESOLVE_MIN_SCORE:
-        return key, None
+        answer = (key, None)
+    elif len(rows) > 1 and (top_score - float(rows[1][2])) < RESOLVE_MARGIN:
+        # Ambiguous. Mint a new subject, but keep the near match reachable.
+        answer = (key, top_key)
+    else:
+        answer = (top_key, None)
 
-    if len(rows) > 1:
-        second_score = float(rows[1][2])
-        if (top_score - second_score) < RESOLVE_MARGIN:
-            # Ambiguous. Mint a new subject, but keep the near match reachable.
-            return key, top_key
-
-    return top_key, None
+    _RESOLVED[(store.url, tenant, terms)] = answer
+    return answer

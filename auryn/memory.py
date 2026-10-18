@@ -110,9 +110,9 @@ class Memory:
         """A session's turns in sequence, or the tenant's sessions, newest first."""
         if session is not None:
             sid = session.id if isinstance(session, Session) else session
-            rows = _rows(self.store.query(self.tenant, q.SESSION_TURNS, {"session": sid}))
+            rows = _rows(self.store.query(self.tenant, q.SESSION_TURNS, {"session": sid}, read_only=True))
             return [Turn(id=r["id"], role=r["role"], text=r["text"], idx=int(r["idx"]), at=int(r["at"])) for r in rows]
-        rows = _rows(self.store.query(self.tenant, q.LIST_SESSIONS, {"limit": int(limit)}))
+        rows = _rows(self.store.query(self.tenant, q.LIST_SESSIONS, {"limit": int(limit)}, read_only=True))
         return [
             Session(
                 id=r["id"],
@@ -150,44 +150,49 @@ class Memory:
         if not names:
             names = ["general"]
 
-        keys: list[str] = []
+        rows: list[dict[str, str]] = []
+        links: list[tuple[str, str]] = []
         for name in names:
             key, related = schema.resolve_subject(self.store, self.tenant, name)
-            self.store.query(self.tenant, q.CREATE_SUBJECT, {"key": key, "name": name})
+            rows.append({"k": key, "n": name})
             if related and related != key:
-                # Ambiguity becomes an edge, never a wrong merge.
-                self.store.query(self.tenant, q.LINK_SUBJECTS, {"a": key, "b": related})
-            keys.append(key)
+                links.append((key, related))
 
+        keys = [r["k"] for r in rows]
         mid = id or _rid("m")
         sid = session.id if isinstance(session, Session) else session
         at = _now()
-        self.store.query(
+        old_ids = [supersedes] if isinstance(supersedes, str) else list(supersedes)
+
+        # ONE round trip: the memory, its kind label, its subjects and their
+        # names, the session link, the writing agent, any supersession, and the
+        # sibling event count the consolidation rule needs.
+        res = self.store.query(
             self.tenant,
-            q.WRITE_MEMORY,
+            q.WRITE_MEMORY_ONE_SHOT.format(label=kind),
             {
-                "id": mid,
-                "text": body,
-                "at": at,
-                "subject_key": keys[0],
-                "agent": agent,
-                "session_id": sid,
-                "truncated": truncated,
-                "derived": False,
-                "trigger": trigger,
-                "subjects": keys,
+                "id": mid, "text": body, "at": at, "subject_key": keys[0],
+                "agent": agent, "session_id": sid, "truncated": truncated,
+                "trigger": trigger, "subjects": rows, "old_ids": old_ids,
+                "event_delta": 1 if kind == EPISODIC else 0,
             },
         )
-        self.store.query(self.tenant, q.ADD_KIND_LABEL.format(label=kind), {"id": mid})
 
-        old_ids = [supersedes] if isinstance(supersedes, str) else list(supersedes)
-        if old_ids:
-            self.store.query(self.tenant, q.SUPERSEDE, {"old_ids": old_ids, "new_id": mid})
+        # Ambiguity becomes an edge, never a wrong merge. Rare, so it stays a
+        # separate query rather than complicating the hot path.
+        for a, b in links:
+            self.store.query(self.tenant, q.LINK_SUBJECTS, {"a": a, "b": b})
+
+        # Only derive when the count returned above crosses the threshold, so
+        # the common write costs nothing extra.
         if kind == EPISODIC:
-            consolidate.maybe_derive(
-                self.store, self.tenant, keys[0],
-                threshold=self.consolidate_after, at=at, session_id=sid,
-            )
+            written = _rows(res)
+            count = int(written[0].get("events_on_subject") or 0) if written else 0
+            if count >= self.consolidate_after:
+                consolidate.derive_now(
+                    self.store, self.tenant, keys[0], count=count,
+                    at=at, session_id=sid,
+                )
 
         return MemoryRecord(
             id=mid, kind=kind, text=body, at=at, agent=agent,
@@ -219,6 +224,7 @@ class Memory:
             res = self.store.query(
                 self.tenant, q.RECALL_BY_SUBJECT,
                 {"subject": key, "kind": kind, "include_superseded": include_superseded, "cap": cap},
+                read_only=True,
             )
             return [_record(r) for r in _rows(res)]
 
@@ -227,7 +233,9 @@ class Memory:
             return []
         res = self.store.query(
             self.tenant, q.RECALL,
-            {"terms": terms, "kind": kind, "include_superseded": include_superseded, "cap": cap},
+            {"terms": terms, "kind": kind, "include_superseded": include_superseded,
+             "cap": cap, "seed_cap": cap * 3, "near_cap": cap * 5},
+            read_only=True,
         )
         return [_record(r) for r in _rows(res)]
 
@@ -256,12 +264,12 @@ class Memory:
         else:
             kinds = [SEMANTIC, PROCEDURAL]
         cap = int(limit or self.recall_cap)
-        res = self.store.query(self.tenant, q.STANDING, {"kinds": kinds, "cap": cap})
+        res = self.store.query(self.tenant, q.STANDING, {"kinds": kinds, "cap": cap}, read_only=True)
         return [_record(r) for r in _rows(res)]
 
     def explain(self, memory_id: str) -> Provenance | None:
         """Why a memory exists: who wrote it, where, and what it came from."""
-        rows = _rows(self.store.query(self.tenant, q.EXPLAIN, {"id": memory_id}))
+        rows = _rows(self.store.query(self.tenant, q.EXPLAIN, {"id": memory_id}, read_only=True))
         if not rows:
             return None
         r = rows[0]
@@ -311,7 +319,7 @@ class Memory:
 
     def pick_up(self, task: str, *, agent: str | None = None) -> TaskContext | None:
         """Everything a receiving agent needs, from a tenant and a task id alone."""
-        rows = _rows(self.store.query(self.tenant, q.PICK_UP, {"task": task}))
+        rows = _rows(self.store.query(self.tenant, q.PICK_UP, {"task": task}, read_only=True))
         if not rows:
             return None
         r = rows[0]
@@ -363,20 +371,20 @@ class Memory:
         self.store.query(self.tenant, q.RELEASE, {"task": task, "agent": agent, "at": _now()})
 
     def unclaimed_parts(self, parent: str, *, limit: int = 50) -> list[dict[str, Any]]:
-        return _rows(self.store.query(self.tenant, q.UNCLAIMED_PARTS, {"parent": parent, "limit": int(limit)}))
+        return _rows(self.store.query(self.tenant, q.UNCLAIMED_PARTS, {"parent": parent, "limit": int(limit)}, read_only=True))
 
     def in_flight(self, *, limit: int = 50) -> list[dict[str, Any]]:
         """Who is working on what, right now, across this tenant."""
-        return _rows(self.store.query(self.tenant, q.IN_FLIGHT, {"limit": int(limit)}))
+        return _rows(self.store.query(self.tenant, q.IN_FLIGHT, {"limit": int(limit)}, read_only=True))
 
     def parts_status(self, parent: str) -> list[dict[str, Any]]:
-        return _rows(self.store.query(self.tenant, q.PARTS_STATUS, {"parent": parent}))
+        return _rows(self.store.query(self.tenant, q.PARTS_STATUS, {"parent": parent}, read_only=True))
 
     def set_task_state(self, task: str, state: str) -> None:
         self.store.query(self.tenant, q.SET_TASK_STATE, {"task": task, "state": state, "at": _now()})
 
     def open_tasks(self, *, limit: int = 20) -> list[dict[str, Any]]:
-        return _rows(self.store.query(self.tenant, q.OPEN_TASKS, {"limit": int(limit)}))
+        return _rows(self.store.query(self.tenant, q.OPEN_TASKS, {"limit": int(limit)}, read_only=True))
 
     # ---------------------------------------------------------------- instruments
 

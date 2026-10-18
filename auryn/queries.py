@@ -114,30 +114,6 @@ MERGE (a)-[:RELATED_TO]->(b)
 RETURN a.key AS a, b.key AS b
 """
 
-# ---------------------------------------------------------------- write
-
-WRITE_MEMORY = """
-MERGE (m:Memory {id: $id})
-SET   m.text = $text, m.at = $at, m.subject_key = $subject_key,
-      m.agent = $agent, m.session_id = $session_id,
-      m.truncated = $truncated, m.derived = $derived,
-      m.superseded = false, m.trigger = $trigger
-WITH  m
-CALL { WITH m
-  UNWIND $subjects AS sk
-    MERGE (s:Subject {key: sk})
-    MERGE (m)-[:ABOUT]->(s)
-}
-WITH m
-CALL { WITH m
-  MATCH (sess:Session {id: $session_id})
-  MERGE (sess)-[:PRODUCED]->(m)
-}
-MERGE (a:Agent {name: $agent})
-MERGE (a)-[:WROTE]->(m)
-RETURN m.id AS id
-"""
-
 # The kind label is added separately, because a label cannot be a parameter.
 # The value is never user input; it comes from the KINDS tuple in models.py.
 ADD_KIND_LABEL = "MATCH (m:Memory {{id: $id}}) SET m:{label} RETURN m.id AS id"
@@ -186,25 +162,6 @@ WITH m
 MATCH (ps:Subject {{key: $subject_key}})
 SET   ps.event_count = coalesce(ps.event_count, 0) + $event_delta
 RETURN m.id AS id, ps.event_count AS events_on_subject
-"""
-
-# Supersession is ALWAYS explicit. The caller names the memories being
-# replaced; the engine never infers it from a shared subject.
-#
-# Why: inferring it from a subject destroyed data. Two different facts about
-# one subject ("allergic to peanuts", "allergic to shellfish") must coexist,
-# and under parallel writes every agent superseded every other, leaving
-# nothing standing. Guessing at contradiction needs a model, and this engine
-# has none by design.
-SUPERSEDE = """
-UNWIND $old_ids AS oid
-MATCH (old:Memory {id: oid})
-WHERE old.id <> $new_id AND coalesce(old.superseded, false) = false
-SET   old.superseded = true
-WITH  collect(old) AS olds
-MATCH (new:Memory {id: $new_id})
-FOREACH (o IN olds | MERGE (new)-[:SUPERSEDES]->(o))
-RETURN size(olds) AS superseded_count
 """
 
 # ---------------------------------------------------------------- recall

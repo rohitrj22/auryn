@@ -16,7 +16,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from auryn.models import EPISODIC, PROCEDURAL, SEMANTIC
+from auryn.models import EVENT, PROCEDURE, FACT
 from . import MemoryOp, ProviderFailure, Reply
 
 MODEL = "gemini-3.8-flash"
@@ -36,7 +36,7 @@ Use Event for something that happened, Fact for something that stays true, and
 Procedure for how to carry out a task. Return an empty list if nothing is worth
 keeping."""
 
-_KINDS = {EPISODIC, SEMANTIC, PROCEDURAL}
+_KINDS = {EVENT, FACT, PROCEDURE}
 
 
 class GeminiProvider:

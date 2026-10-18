@@ -4,7 +4,7 @@
 all depend on. Nothing else in `auryn/` is public.
 
 ```python
-from auryn import Memory, EPISODIC, SEMANTIC, PROCEDURAL
+from auryn import Memory, EVENT, FACT, PROCEDURE
 
 mem = Memory(tenant="t_acme")            # creates and indexes the graph if new
 ```
@@ -43,6 +43,10 @@ Returns memories ranked by connection closeness, then recency (FR-009).
 - Each record reports `session_id` and `agent`, so an answer is traceable (FR-011).
 
 ## `standing(*, kind=None, limit=None, include_events=False) -> list[MemoryRecord]`
+
+Also note the shared-state operations below, added after this contract was
+first written: `join`, `leave`, `add_part`, `claim`, `release`,
+`unclaimed_parts`, `in_flight` and `parts_status`.
 
 Everything that currently holds, with no request to match against. Facts and
 procedures by default; events only when asked for. Superseded memories are

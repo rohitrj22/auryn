@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import statistics
 
-from auryn import SEMANTIC, Memory
+from auryn import FACT, Memory
 
 TENANT = "test-recall-scales"
 # Generous, so the test is about the shape of the curve, not the machine.
@@ -37,12 +37,12 @@ def test_recall_cost_does_not_grow_with_total_memory() -> None:
     mem = Memory(tenant=TENANT)
 
     for i in range(100):
-        mem.remember(SEMANTIC, f"a fact about a thing number {i}",
+        mem.remember(FACT, f"a fact about a thing number {i}",
                      agent="t", subject=f"subject-{i % 5}")
     small = _median_ms(mem, "fact thing")
 
     for i in range(100, 1200):
-        mem.remember(SEMANTIC, f"a fact about a thing number {i}",
+        mem.remember(FACT, f"a fact about a thing number {i}",
                      agent="t", subject=f"subject-{i % 5}")
     large = _median_ms(mem, "fact thing")
 
@@ -63,7 +63,7 @@ def test_recall_still_respects_its_cap() -> None:
     mem.forget_everything()
     mem = Memory(tenant=TENANT, recall_cap=20)
     for i in range(200):
-        mem.remember(SEMANTIC, f"a fact about a thing number {i}",
+        mem.remember(FACT, f"a fact about a thing number {i}",
                      agent="t", subject=f"subject-{i % 5}")
     assert len(mem.recall("fact thing")) == 20
     assert len(mem.recall("fact thing", limit=5)) == 5

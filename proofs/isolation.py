@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import time
 
-from auryn import SEMANTIC, Memory, Store
+from auryn import FACT, Memory, Store
 from auryn.metrics import graph_memory_usage, used_memory
 
 from ._check import Proof, finish
@@ -26,7 +26,7 @@ def main() -> None:
     ap.add_argument("--probes", type=int, default=1000)
     args = ap.parse_args()
 
-    p = Proof("p4  tenant isolation",
+    p = Proof("tenant isolation",
               "separate memory per user or tenant").start()
 
     store = Store()
@@ -39,7 +39,7 @@ def main() -> None:
     t0 = time.perf_counter()
     for n in range(args.tenants):
         mem = Memory(tenant=f"{PREFIX}{n:05d}")
-        mem.remember(SEMANTIC, SECRET.format(n=n), agent="setup", subject=f"secret-{n}")
+        mem.remember(FACT, SECRET.format(n=n), agent="setup", subject=f"secret-{n}")
     build_s = time.perf_counter() - t0
 
     after_mem = used_memory(store)

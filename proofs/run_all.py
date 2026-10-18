@@ -13,12 +13,12 @@ import sys
 import time
 
 PROOFS = (
-    ("p1", "persistence", "proofs.p1_persistence", []),
-    ("p2", "memory kinds", "proofs.p2_memory_kinds", []),
-    ("p3", "handoff", "proofs.p3_handoff", []),
-    ("p4", "tenant isolation", "proofs.p4_isolation", ["--tenants", "200", "--probes", "400"]),
-    ("p6", "shared state", "proofs.p6_shared_state", []),
-    ("p5", "concurrency", "proofs.p5_concurrency", ["--seconds", "10"]),
+    ("", "persistence", "proofs.persistence", []),
+    ("", "memory kinds", "proofs.memory_kinds", []),
+    ("", "handoff", "proofs.handoff", []),
+    ("", "tenant isolation", "proofs.isolation", ["--tenants", "200", "--probes", "400"]),
+    ("", "shared state", "proofs.shared_state", []),
+    ("", "concurrency", "proofs.concurrency", ["--seconds", "10"]),
 )
 
 GREEN, RED, DIM, BOLD, OFF = "\033[32m", "\033[31m", "\033[2m", "\033[1m", "\033[0m"
@@ -38,7 +38,7 @@ def main() -> None:
         ok = proc.returncode == 0
         results.append((tag, label, ok, took, proc.stdout if not verbose else ""))
         mark = f"{GREEN}PASS{OFF}" if ok else f"{RED}FAIL{OFF}"
-        print(f"  {tag}  {label:.<36} {mark}  {DIM}{took:5.1f}s{OFF}")
+        print(f"  {label:.<40} {mark}  {DIM}{took:5.1f}s{OFF}")
         if not ok and not verbose:
             for line in (proc.stdout or "").splitlines():
                 if "FAIL" in line:
@@ -51,7 +51,7 @@ def main() -> None:
         print(f"  {GREEN}{BOLD}{passed}/{total} passed{OFF}")
     else:
         print(f"  {RED}{BOLD}{passed}/{total} passed{OFF}")
-    print(f"  {DIM}p0 (the graph does real work) runs separately; it needs "
+    print(f"  {DIM}the graph-required proof runs separately; it needs "
           f"FalkorDB stopped{OFF}\n")
     sys.exit(0 if passed == total else 1)
 

@@ -5,9 +5,9 @@ hand between each other, and one isolated graph per tenant.
 """
 
 from .models import (
-    EPISODIC,
-    PROCEDURAL,
-    SEMANTIC,
+    EVENT,
+    PROCEDURE,
+    FACT,
     AurynError,
     Handoff,
     InvalidTenant,
@@ -26,7 +26,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "Memory", "Store",
-    "EPISODIC", "SEMANTIC", "PROCEDURAL",
+    "EVENT", "FACT", "PROCEDURE",
     "MemoryRecord", "Session", "Turn", "Handoff", "TaskContext", "Provenance", "Stats",
     "AurynError", "StoreUnavailable", "InvalidTenant",
 ]

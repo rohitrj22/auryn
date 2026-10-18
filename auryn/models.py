@@ -5,12 +5,20 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-# The three memory kinds. The public name maps to the graph label.
-EPISODIC = "Event"
-SEMANTIC = "Fact"
-PROCEDURAL = "Procedure"
+# The three memory kinds. One name, used in Python and in the graph alike.
+#
+# These are the standard episodic, semantic and procedural kinds. They are named
+# for what they hold rather than for the theory, because a reader meeting two
+# names for one idea has to translate on every line.
+#
+#   EVENT     episodic    something that happened, with a time
+#   FACT      semantic    something that stays true, with no expiry
+#   PROCEDURE procedural  how to act, and the condition it applies under
+EVENT = "Event"
+FACT = "Fact"
+PROCEDURE = "Procedure"
 
-KINDS = (EPISODIC, SEMANTIC, PROCEDURAL)
+KINDS = (EVENT, FACT, PROCEDURE)
 
 # A memory longer than this is stored truncated, and the truncation is recorded.
 MAX_TEXT = 4000

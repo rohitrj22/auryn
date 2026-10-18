@@ -53,7 +53,7 @@ def test_engine_is_importable_without_upper_layers() -> None:
     import auryn
 
     assert auryn.Memory is not None
-    assert set(("EPISODIC", "SEMANTIC", "PROCEDURAL")).issubset(set(auryn.__all__))
+    assert set(("EVENT", "FACT", "PROCEDURE")).issubset(set(auryn.__all__))
 
 
 def test_engine_needs_no_text_generator() -> None:

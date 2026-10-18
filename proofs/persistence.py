@@ -9,15 +9,15 @@ from __future__ import annotations
 import multiprocessing as mp
 import sys
 
-from auryn import EPISODIC, PROCEDURAL, SEMANTIC, Memory
+from auryn import EVENT, PROCEDURE, FACT, Memory
 
 from ._check import Proof, finish
 
 TENANT = "proof-p1"
 FACTS = [
-    (SEMANTIC, "the reporter prefers email over phone", "contact"),
-    (PROCEDURAL, "close as duplicate only after the cause is recorded", "policy"),
-    (EPISODIC, "issue 441 reported on 3 October", "issue-441"),
+    (FACT, "the reporter prefers email over phone", "contact"),
+    (PROCEDURE, "close as duplicate only after the cause is recorded", "policy"),
+    (EVENT, "issue 441 reported on 3 October", "issue-441"),
 ]
 
 
@@ -40,7 +40,7 @@ def _reader(tenant: str) -> dict:
     mem = Memory(tenant=tenant)
     return {
         "standing": [m.text for m in mem.standing()],
-        "episodic": [m.text for m in mem.recall("issue 441 reported", kind=EPISODIC)],
+        "episodic": [m.text for m in mem.recall("issue 441 reported", kind=EVENT)],
         "sessions": len(mem.history()),
         "turns": [t.text for t in mem.history(session=mem.history()[0].id)] if mem.history() else [],
     }
@@ -54,7 +54,7 @@ def _virgin(tenant: str) -> dict:
 
 
 def main() -> None:
-    p = Proof("p1  persistence", "memory outlives the process that wrote it").start()
+    p = Proof("persistence", "memory outlives the process that wrote it").start()
 
     with mp.Pool(1) as pool:
         written = pool.apply(_writer, (TENANT,))
@@ -66,7 +66,7 @@ def main() -> None:
 
     standing_texts = set(got["standing"])
     for kind, text, _ in FACTS:
-        if kind == EPISODIC:
+        if kind == EVENT:
             continue
         p.check(f"recalled after restart: {text[:48]}", text in standing_texts)
 

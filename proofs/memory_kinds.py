@@ -6,7 +6,7 @@ them useful: a corrected belief is kept, and repeated events become a fact.
 
 from __future__ import annotations
 
-from auryn import EPISODIC, PROCEDURAL, SEMANTIC, Memory
+from auryn import EVENT, PROCEDURE, FACT, Memory
 
 from ._check import Proof, finish
 
@@ -14,22 +14,22 @@ TENANT = "proof-p2"
 
 
 def main() -> None:
-    p = Proof("p2  memory kinds", "episodic, semantic and procedural memory").start()
+    p = Proof("memory kinds", "episodic, semantic and procedural memory").start()
 
     mem = Memory(tenant=TENANT); mem.forget_everything()
     mem = Memory(tenant=TENANT, consolidate_after=3)
     s = mem.start_session(agent="p2")
 
-    mem.remember(EPISODIC, "issue 501 reported a crash on launch",
+    mem.remember(EVENT, "issue 501 reported a crash on launch",
                  agent="p2", subject="issue-501", session=s)
-    mem.remember(SEMANTIC, "the sync layer is owned by the platform team",
+    mem.remember(FACT, "the sync layer is owned by the platform team",
                  agent="p2", subject="ownership", session=s)
-    mem.remember(PROCEDURAL, "a release above risk level 3 needs a second reviewer",
+    mem.remember(PROCEDURE, "a release above risk level 3 needs a second reviewer",
                  agent="p2", subject="release policy", session=s, trigger="risk>3")
 
     query = "issue 501 crash sync platform release reviewer"
-    for kind, expect in ((EPISODIC, "issue 501"), (SEMANTIC, "platform team"),
-                         (PROCEDURAL, "second reviewer")):
+    for kind, expect in ((EVENT, "issue 501"), (FACT, "platform team"),
+                         (PROCEDURE, "second reviewer")):
         got = mem.recall(query, kind=kind)
         kinds = {m.kind for m in got}
         p.check(f"{kind} requested alone returns only {kind}",
@@ -41,27 +41,27 @@ def main() -> None:
             len({m.kind for m in allk}) > 1,
             f"kinds={sorted({m.kind for m in allk})}")
 
-    proc = mem.recall(query, kind=PROCEDURAL)
+    proc = mem.recall(query, kind=PROCEDURE)
     p.check("a procedure carries the condition it applies under",
             bool(proc) and proc[0].trigger == "risk>3",
             f"trigger={proc[0].trigger if proc else None!r}")
 
     # Two different facts about one subject must coexist.
-    mem.remember(SEMANTIC, "allergic to peanuts", agent="p2", subject="allergies")
-    mem.remember(SEMANTIC, "allergic to shellfish", agent="p2", subject="allergies")
-    both = [m.text for m in mem.standing(kind=SEMANTIC)]
+    mem.remember(FACT, "allergic to peanuts", agent="p2", subject="allergies")
+    mem.remember(FACT, "allergic to shellfish", agent="p2", subject="allergies")
+    both = [m.text for m in mem.standing(kind=FACT)]
     p.check("two different facts about one subject coexist",
             "allergic to peanuts" in both and "allergic to shellfish" in both,
             "neither buried the other")
 
     # A corrected belief is kept and flagged.
-    old = mem.remember(SEMANTIC, "the cause is a platform path difference",
+    old = mem.remember(FACT, "the cause is a platform path difference",
                        agent="p2", subject="cause-x")
-    new = mem.remember(SEMANTIC, "the cause is a token expiry",
+    new = mem.remember(FACT, "the cause is a token expiry",
                        agent="p2", subject="cause-x", supersedes=old.id)
-    current = [m.text for m in mem.standing(kind=SEMANTIC)]
+    current = [m.text for m in mem.standing(kind=FACT)]
     history = {m.text: m.superseded for m in
-               mem.recall("cause platform token expiry", kind=SEMANTIC,
+               mem.recall("cause platform token expiry", kind=FACT,
                           include_superseded=True)}
     p.check("the corrected belief replaces the old one in current answers",
             "the cause is a token expiry" in current
@@ -76,9 +76,9 @@ def main() -> None:
 
     # Repeated events on one subject become a fact, with its evidence.
     for n in (601, 602, 603):
-        mem.remember(EPISODIC, f"issue {n} reported the same timeout",
+        mem.remember(EVENT, f"issue {n} reported the same timeout",
                      agent="p2", subject="timeout", session=s)
-    derived = [m for m in mem.standing(kind=SEMANTIC) if m.derived]
+    derived = [m for m in mem.standing(kind=FACT) if m.derived]
     p.check("three events on one subject derived a fact",
             len(derived) >= 1, f"derived: {[m.text for m in derived]}")
     if derived:

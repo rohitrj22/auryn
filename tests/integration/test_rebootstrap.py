@@ -6,17 +6,17 @@ full-text index was never rebuilt and recall silently returned nothing.
 
 from __future__ import annotations
 
-from auryn import SEMANTIC, Memory
+from auryn import FACT, Memory
 
 
 def test_recall_works_after_forget_everything() -> None:
     mem = Memory(tenant="test-rebootstrap")
-    mem.remember(SEMANTIC, "a distinctive marker phrase", agent="t", subject="marker")
+    mem.remember(FACT, "a distinctive marker phrase", agent="t", subject="marker")
     assert mem.recall("distinctive marker"), "baseline recall must work"
 
     mem.forget_everything()
     again = Memory(tenant="test-rebootstrap")
-    again.remember(SEMANTIC, "a distinctive marker phrase", agent="t", subject="marker")
+    again.remember(FACT, "a distinctive marker phrase", agent="t", subject="marker")
 
     assert again.recall("distinctive marker"), (
         "recall returned nothing after the graph was dropped and rebuilt; "

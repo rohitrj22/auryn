@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import multiprocessing as mp
 
-from auryn import EPISODIC, SEMANTIC, Memory
+from auryn import EVENT, FACT, Memory
 
 from ._check import Proof, finish
 
@@ -28,8 +28,8 @@ def _first_agent(tenant: str) -> dict:
     mem.create_task(TASK, title="idle request failure", agent="first",
                     subjects=["session expiry"])
     for text in FINDINGS:
-        mem.remember(SEMANTIC, text, agent="first", subject="session expiry", session=s)
-    mem.remember(EPISODIC, "three reporters described the same failure",
+        mem.remember(FACT, text, agent="first", subject="session expiry", session=s)
+    mem.remember(EVENT, "three reporters described the same failure",
                  agent="first", subject="session expiry", session=s)
     h = mem.handoff(TASK, from_agent="first", to_agent="second", note="cause recorded")
     mem.end_session(s)
@@ -62,7 +62,7 @@ def _orphan_check(tenant: str) -> dict:
 
 
 def main() -> None:
-    p = Proof("p3  handoff", "one agent picks up another agent's work").start()
+    p = Proof("handoff", "one agent picks up another agent's work").start()
 
     with mp.Pool(1) as pool:
         handed = pool.apply(_first_agent, (TENANT,))

@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import multiprocessing as mp
 
-from auryn import SEMANTIC, Memory
+from auryn import FACT, Memory
 
 from ._check import Proof, finish
 
@@ -30,9 +30,9 @@ def _worker(args: tuple[str, int, int]) -> dict:
         got = next((p for p in free if mem.claim(p["task"], agent=name)), None)
         if got is None:
             continue
-        prior = mem.standing(kind=SEMANTIC)   # what the others already found
+        prior = mem.standing(kind=FACT)   # what the others already found
         saw.append(len(prior))
-        mem.remember(SEMANTIC, f"finding for {got['title']} by {name}",
+        mem.remember(FACT, f"finding for {got['title']} by {name}",
                      agent=name, subject=str(got["title"]))
         mem.set_task_state(got["task"], "done")
         done.append(got["task"])
@@ -53,7 +53,7 @@ def main() -> None:
     ap.add_argument("--racers", type=int, default=16)
     args = ap.parse_args()
 
-    p = Proof("p6  shared state", "many agents share state on one job").start()
+    p = Proof("shared state", "many agents share state on one job").start()
 
     mem = Memory(tenant=TENANT); mem.forget_everything()
     mem = Memory(tenant=TENANT)
@@ -79,7 +79,7 @@ def main() -> None:
     p.check("more than one agent contributed",
             len(active) > 1, f"agents that did work: {sorted(active)}")
 
-    findings = mem.standing(kind=SEMANTIC)
+    findings = mem.standing(kind=FACT)
     p.check("every finding is readable by every agent",
             len(findings) == args.parts,
             f"{len(findings)} findings in shared memory, written by "

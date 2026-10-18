@@ -18,10 +18,10 @@ import os
 import pathlib
 import time
 
-from auryn import SEMANTIC, Memory
+from auryn import FACT, Memory
 
 from . import agents, source
-from .agents import Event
+from .agents import Step
 
 BAR = "─" * 74
 
@@ -30,7 +30,7 @@ def head(n: int, title: str) -> None:
     print(f"\n{BAR}\n  PHASE {n}  {title}\n{BAR}")
 
 
-def show(events: list[Event | dict]) -> None:
+def show(events: list[Step | dict]) -> None:
     for e in events:
         d = e if isinstance(e, dict) else e.__dict__
         read = f"  (read {d['prior_read']} prior)" if d.get("prior_read") else ""
@@ -95,7 +95,7 @@ def main() -> None:
 
     # ---------------------------------------------------------------- phase 2
     head(2, "the engine concluded something nobody told it")
-    derived = [m for m in mem.standing(kind=SEMANTIC) if m.derived]
+    derived = [m for m in mem.standing(kind=FACT) if m.derived]
     for fact in derived:
         prov = mem.explain(fact.id)
         print(f"  derived  {fact.text}")
@@ -147,7 +147,7 @@ def main() -> None:
     other = Memory(tenant="some-other-repo")
     other.forget_everything()
     other = Memory(tenant="some-other-repo")
-    other.remember(SEMANTIC, "root cause unrelated-thing: belongs to another repo",
+    other.remember(FACT, "root cause unrelated-thing: belongs to another repo",
                    agent="coordinator", subject="unrelated")
     here = [m.text for m in mem.recall("unrelated-thing")]
     there = [m.text for m in other.recall("session-expiry")]
@@ -169,7 +169,8 @@ def main() -> None:
         "config": {k: stats.config.get(k) for k in
                    ("THREAD_COUNT", "OMP_THREAD_COUNT", "MAX_QUEUED_QUERIES", "CACHE_SIZE")},
         "counts": {"claimed": len(seen), "investigated": len(worked),
-                   "recognised": len(skipped), "duplicated": len(seen) - len(set(seen))},
+                   "recognised": len(skipped), "deferred": len(deferred),
+                   "duplicated": len(seen) - len(set(seen))},
     }
     pathlib.Path("output").mkdir(exist_ok=True)
     pathlib.Path("output/triage-run.json").write_text(json.dumps(payload, indent=2) + "\n")

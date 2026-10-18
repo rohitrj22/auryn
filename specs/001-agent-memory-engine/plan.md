@@ -138,21 +138,20 @@ demo/                       # LAYER 2 — thin and replaceable. Target under 20%
 └── run.py                  # Command-line entry for the demo
 
 proofs/                     # One per Track 02 criterion. Each prints PASS or FAIL.
-├── p1_persistence.py       # Restart, empty prompt, still knows
-├── p2_memory_kinds.py      # Three kinds, recalled separately
-├── p3_handoff.py           # Agent B reads agent A's nodes, no message passed
-├── p4_isolation.py         # 1,000 tenant graphs; cross-tenant read returns nothing
-├── p5_concurrency.py       # Multi-process load; server-side percentiles
-├── p0_graph_required.py    # Principle I: stop FalkorDB, product must fail
+├── persistence.py       # Restart, empty prompt, still knows
+├── memory_kinds.py      # Three kinds, recalled separately
+├── handoff.py           # Agent B reads agent A's nodes, no message passed
+├── isolation.py         # 1,000 tenant graphs; cross-tenant read returns nothing
+├── concurrency.py       # Multi-process load; server-side percentiles
+├── graph_required.py    # Principle I: stop FalkorDB, product must fail
 ├── bench/
 │   ├── loadgen.py          # Several worker processes, each pooled
 │   └── report.py           # Client vs server figures; rejected and failed counts
 └── run_all.py              # Runs every proof; one exit code
 
-evals/                      # Measured recall quality. Deterministic, offline.
-├── fixture.py              # ~200 memories, 20 tenants, ~40 labelled queries
-├── metrics.py              # precision@k, recall@k, mean reciprocal rank
-└── run_eval.py             # Prints a table; non-zero exit on regression
+# evals/ was planned and CUT. It was first in the cut order, and the time went
+# to fixing recall's scaling instead. Recall quality is therefore described in
+# words rather than measured. Stated here so the gap is recorded, not hidden.
 
 tests/
 ├── unit/                   # Models, consolidation rule, metrics parsing
@@ -183,7 +182,7 @@ Two choices inside that structure carry weight:
 
 | Principle | Verdict | Evidence in the design |
 |---|---|---|
-| **I. Graph-Native Memory** | **PASS** | `data-model.md` defines one graph per tenant and no second store. `proofs/p0_graph_required.py` stops FalkorDB and asserts total failure. `contracts/memory-api.md` raises `StoreUnavailable` and forbids degrading. |
+| **I. Graph-Native Memory** | **PASS** | `data-model.md` defines one graph per tenant and no second store. `proofs/graph_required.py` stops FalkorDB and asserts total failure. `contracts/memory-api.md` raises `StoreUnavailable` and forbids degrading. |
 | **II. Five Criteria Are the Deliverable** | **PASS** | `quickstart.md` gives one command per criterion, each naming the requirements and success criteria it checks. |
 | **III. Domain-Agnostic Engine** | **PASS** | Every label in `data-model.md` is generic. `tests/unit/test_layering.py` greps `auryn/` and checks imports. |
 | **IV. Zero-Credential Runnability** | **PASS** | `contracts/provider.md` makes `mock` the default and deterministic. `quickstart.md` states "No API key" as a prerequisite. |

@@ -6,7 +6,7 @@ The engine is unchanged. Nothing about it knows what a meal is.
 Run:  uv run python examples/bring_your_own_agent.py
 """
 
-from auryn import Memory, EPISODIC, PROCEDURAL, SEMANTIC
+from auryn import Memory, EVENT, PROCEDURE, FACT
 
 # --------------------------------------------------------------------------
 # YOUR CODE. Auryn never sees inside this. Replace it with any model call:
@@ -64,17 +64,17 @@ def main() -> None:
 
     print("\nuser : I am allergic to peanuts.")
     print("bot  :", agent_with_memory(mem, s1, "I am allergic to peanuts.", 0)[:70])
-    mem.remember(SEMANTIC, "allergic to peanuts",                  # (3) ADDED
+    mem.remember(FACT, "allergic to peanuts",                  # (3) ADDED
                  agent="meal-bot", subject="Allergies", session=s1)
 
     print("\nuser : I skipped dinner again last night.")
     print("bot  :", agent_with_memory(mem, s1, "I skipped dinner again last night.", 1)[:70])
-    mem.remember(EPISODIC, "skipped dinner on a weeknight",
+    mem.remember(EVENT, "skipped dinner on a weeknight",
                  agent="meal-bot", subject="Dinner habits", session=s1)
 
     print("\nuser : Never suggest anything over 600 calories for dinner.")
     print("bot  :", agent_with_memory(mem, s1, "Never over 600 calories for dinner.", 2)[:70])
-    mem.remember(PROCEDURAL, "keep dinner suggestions under 600 calories",
+    mem.remember(PROCEDURE, "keep dinner suggestions under 600 calories",
                  agent="meal-bot", subject="Dinner habits", session=s1,
                  trigger="meal == dinner")
 
@@ -96,11 +96,11 @@ def main() -> None:
     print("   (the allergy came from standing(), not from matching the question)")
 
     print("\nOnly the lasting rules:")
-    for m in later.recall("dinner calories", kind=PROCEDURAL):
+    for m in later.recall("dinner calories", kind=PROCEDURE):
         print(f"   {m.text}   (applies when {m.trigger})")
 
     print("\nOnly the hard facts:")
-    for m in later.recall("allergy peanuts", kind=SEMANTIC):
+    for m in later.recall("allergy peanuts", kind=FACT):
         print(f"   {m.text}")
 
     print("\n" + "=" * 74)
@@ -125,7 +125,7 @@ def main() -> None:
     print("=" * 74)
     other = Memory(tenant="user_9001"); other.forget_everything()
     other = Memory(tenant="user_9001")
-    other.remember(SEMANTIC, "vegetarian", agent="meal-bot", subject="Diet")
+    other.remember(FACT, "vegetarian", agent="meal-bot", subject="Diet")
     print("\nuser_9001 recalls 'peanuts' ->", [m.text for m in other.recall("peanuts allergy")])
     print("user_8812 recalls 'vegetarian' ->", [m.text for m in later.recall("vegetarian")])
     print("Both empty. The graph boundary makes a leak impossible, not merely forbidden.")

@@ -1,5 +1,19 @@
 # Contract: every query the product depends on
 
+**Status, 2026-10-18.** Two queries listed below were merged into one and no
+longer exist as separate statements:
+
+| Was | Now |
+|---|---|
+| `WRITE_MEMORY` plus `ADD_KIND_LABEL` plus the subject writes plus the sibling count | `WRITE_MEMORY_ONE_SHOT`, one round trip |
+| `SUPERSEDE` | Folded into that same query, driven by an explicit `$old_ids` list |
+
+`RECALL` also gained `LIMIT $seed_cap` before its traversal. Without it, recall
+expanded every full-text match before trimming, so cost grew with how much a
+tenant remembered: 14 ms at 100 memories, 312 ms at 800, and a timeout at 2,000.
+
+[`auryn/queries.py`](../../../auryn/queries.py) is the source of truth.
+
 Rule 10 requires publishing these. They all live in `auryn/queries.py`, and
 nothing else in the codebase writes Cypher. Every value is a parameter; no query
 is assembled by joining text (FR-052).

@@ -15,9 +15,9 @@ from . import consolidate
 from . import queries as q
 from . import schema
 from .models import (
-    EPISODIC,
-    PROCEDURAL,
-    SEMANTIC,
+    EVENT,
+    PROCEDURE,
+    FACT,
     Handoff,
     MemoryRecord,
     Provenance,
@@ -174,7 +174,7 @@ class Memory:
                 "id": mid, "text": body, "at": at, "subject_key": keys[0],
                 "agent": agent, "session_id": sid, "truncated": truncated,
                 "trigger": trigger, "subjects": rows, "old_ids": old_ids,
-                "event_delta": 1 if kind == EPISODIC else 0,
+                "event_delta": 1 if kind == EVENT else 0,
             },
         )
 
@@ -185,7 +185,7 @@ class Memory:
 
         # Only derive when the count returned above crosses the threshold, so
         # the common write costs nothing extra.
-        if kind == EPISODIC:
+        if kind == EVENT:
             written = _rows(res)
             count = int(written[0].get("events_on_subject") or 0) if written else 0
             if count >= self.consolidate_after:
@@ -262,7 +262,7 @@ class Memory:
         elif include_events:
             kinds = None
         else:
-            kinds = [SEMANTIC, PROCEDURAL]
+            kinds = [FACT, PROCEDURE]
         cap = int(limit or self.recall_cap)
         res = self.store.query(self.tenant, q.STANDING, {"kinds": kinds, "cap": cap}, read_only=True)
         return [_record(r) for r in _rows(res)]

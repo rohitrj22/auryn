@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from auryn.models import EPISODIC, PROCEDURAL, SEMANTIC
+from auryn.models import EVENT, PROCEDURE, FACT
 
 from . import MemoryOp, Reply
 
@@ -92,7 +92,7 @@ class MockProvider:
             return Reply(
                 text=f"{ref} matches a cause already in memory: {cause}.",
                 memory_ops=[
-                    MemoryOp(kind=EPISODIC, text=f"{ref} reported, same cause as known {cause}",
+                    MemoryOp(kind=EVENT, text=f"{ref} reported, same cause as known {cause}",
                              subjects=(cause,)),
                 ],
             )
@@ -101,9 +101,9 @@ class MockProvider:
         return Reply(
             text=f"Reproduced {ref}. Cause: {cause} — {explanation}.",
             memory_ops=[
-                MemoryOp(kind=SEMANTIC, text=f"root cause {cause}: {explanation}",
+                MemoryOp(kind=FACT, text=f"root cause {cause}: {explanation}",
                          subjects=(cause,)),
-                MemoryOp(kind=EPISODIC, text=f"{ref} reported and reproduced",
+                MemoryOp(kind=EVENT, text=f"{ref} reported and reproduced",
                          subjects=(cause,)),
             ],
         )

@@ -18,7 +18,7 @@ import argparse
 import multiprocessing as mp
 import time
 
-from auryn import SEMANTIC, Memory, Store
+from auryn import FACT, Memory, Store
 from auryn.metrics import (
     config,
     graph_query_percentiles,
@@ -48,7 +48,7 @@ def _load(args: tuple[int, int, float, int]) -> dict:
         try:
             t0 = time.perf_counter_ns()
             if i % 3 == 0:
-                mem.remember(SEMANTIC, f"w{worker} fact {i} for tenant {t}",
+                mem.remember(FACT, f"w{worker} fact {i} for tenant {t}",
                              agent=f"w{worker}", subject=f"subject-{i % 7}")
                 writes += 1
             else:
@@ -69,7 +69,7 @@ def main() -> None:
     ap.add_argument("--seconds", type=float, default=15.0)
     args = ap.parse_args()
 
-    p = Proof("p5  concurrency", "high-concurrency reads and writes").start()
+    p = Proof("concurrency", "high-concurrency reads and writes").start()
 
     store = Store()
     for g in [g for g in store.list_graphs() if g.startswith(PREFIX)]:
@@ -145,7 +145,7 @@ def main() -> None:
     crossed = 0
     for t in range(min(10, args.tenants)):
         mem = Memory(tenant=f"{PREFIX}{t:03d}")
-        own = mem.standing(kind=SEMANTIC, limit=200)
+        own = mem.standing(kind=FACT, limit=200)
         if not own:
             lost += 1
         crossed += sum(1 for m in own if f"for tenant {t}" not in m.text)

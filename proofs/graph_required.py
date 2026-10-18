@@ -10,13 +10,13 @@ store. If anything still answers, a second store exists, and the entry would
 be disqualified.
 
     docker compose stop falkordb
-    uv run python -m proofs.p0_graph_required
+    uv run python -m proofs.graph_required
     docker compose start falkordb
 """
 
 from __future__ import annotations
 
-from auryn import EPISODIC, Memory, StoreUnavailable
+from auryn import EVENT, Memory, StoreUnavailable
 
 from ._check import Proof, finish
 
@@ -40,7 +40,7 @@ def _expect_unavailable(p: Proof, label: str, fn) -> None:
 
 
 def main() -> None:
-    p = Proof("p0  the graph does real work",
+    p = Proof("the graph does real work",
               "rule 3: remove FalkorDB and the product must stop").start()
     p.note("this proof expects failure. Run it with FalkorDB stopped.")
 
@@ -60,7 +60,7 @@ def main() -> None:
         return
 
     _expect_unavailable(p, "writing a memory fails",
-                        lambda: mem.remember(EPISODIC, "x", agent="p0", subject="s"))
+                        lambda: mem.remember(EVENT, "x", agent="p0", subject="s"))
     _expect_unavailable(p, "recalling a memory fails", lambda: mem.recall("x"))
     _expect_unavailable(p, "reading standing memory fails", lambda: mem.standing())
     _expect_unavailable(p, "listing history fails", lambda: mem.history())

@@ -30,7 +30,7 @@ Each maps to one Track 02 criterion and prints its own result.
 ### 1. Memory outlives the process
 
 ```bash
-uv run python -m proofs.p1_persistence
+uv run python -m proofs.persistence
 ```
 
 Runs a session, states a fact, exits the process completely, starts a second
@@ -42,7 +42,7 @@ process with an empty prompt, and asserts the fact comes back.
 ### 2. Three kinds, recalled separately
 
 ```bash
-uv run python -m proofs.p2_memory_kinds
+uv run python -m proofs.memory_kinds
 ```
 
 Writes one of each kind, then asks for each kind alone, then asks without a
@@ -56,7 +56,7 @@ asserts the derived fact links back to its events.
 ### 3. One agent picks up another's work
 
 ```bash
-uv run python -m proofs.p3_handoff
+uv run python -m proofs.handoff
 ```
 
 Runs the Triage agent to completion, then starts the Refund agent **in a
@@ -69,7 +69,7 @@ next step. The proof also asserts no message object passed between them.
 ### 4. Tenant isolation, at scale
 
 ```bash
-uv run python -m proofs.p4_isolation --tenants 1000
+uv run python -m proofs.isolation --tenants 1000
 ```
 
 Creates tenant graphs through the engine, counts them with `GRAPH.LIST`, reads
@@ -83,7 +83,7 @@ about 459 KB per tenant, all reclaimed on delete.
 ### 5. Concurrency, measured honestly
 
 ```bash
-uv run python -m proofs.p5_concurrency --procs 8 --seconds 30
+uv run python -m proofs.concurrency --procs 8 --seconds 30
 ```
 
 Generates mixed reads and writes from several processes, then reports both sides.
@@ -102,7 +102,7 @@ the limit, not FalkorDB.
 
 ```bash
 docker compose stop falkordb
-uv run python -m proofs.p0_graph_required
+uv run python -m proofs.graph_required
 ```
 
 **Pass**: every proof fails, and each names FalkorDB as unavailable. Nothing

@@ -1,0 +1,17 @@
+services:
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: auryn-falkordb
+    ports:
+      # Host port defaults to 6379. Override with AURYN_PORT if it is taken.
+      - "${AURYN_PORT:-6379}:6379"
+    volumes:
+      - auryn-data:/var/lib/falkordb/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+volumes:
+  auryn-data:
